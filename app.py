@@ -11,7 +11,7 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
-API_URL = "https://api-inference.huggingface.co/models/google/pegasus-xsum"
+API_URL = "https://router.huggingface.co/models/google/pegasus-xsum"
 HF_TOKEN = os.getenv("HF_TOKEN")
 
 headers = {
