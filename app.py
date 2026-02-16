@@ -11,28 +11,35 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
-API_URL = "https://router.huggingface.co/models/google/pegasus-xsum"
+API_URL = "https://router.huggingface.co/models/facebook/bart-large-cnn"
 HF_TOKEN = os.getenv("HF_TOKEN")
 
 headers = {
     "Authorization": f"Bearer {HF_TOKEN}"
 }
 
+if not HF_TOKEN:
+    print("Warning: HF_TOKEN is missing. Please set it in .env file.")
+
 def query(payload, retries=3, delay=5):
     for attempt in range(retries):
-        response = requests.post(API_URL, headers=headers, json=payload)
+        try:
+            response = requests.post(API_URL, headers=headers, json=payload)
+            print(f"Attempt {attempt+1}: Status Code: {response.status_code}")
+            
+            if response.status_code == 503:
+                time.sleep(delay)
+                continue
 
-        print("Status Code:", response.status_code)
-        print("Response:", response.text)
-
-        if response.status_code == 503:
-            time.sleep(delay)
-            continue
-
-        if response.status_code == 200:
-            return response.json()
-
-        return {"error": response.json()}
+            try:
+                return response.json()
+            except ValueError:
+                print("Error decoding JSON from HF:", response.text)
+                return {"error": f"HF API returned non-JSON: {response.text[:100]}"}
+                
+        except requests.exceptions.RequestException as e:
+            print(f"Request failed: {e}")
+            return {"error": f"Connection error: {str(e)}"}
 
     return {"error": "Model still loading after retries."}
 
@@ -58,7 +65,11 @@ def summarize():
         "inputs": data,
         "parameters": {
             "min_length": minL,
-            "max_length": maxL
+            "max_length": maxL,
+            "do_sample": True,
+            "temperature": 1.2,
+            "top_p": 0.9,
+            "repetition_penalty": 1.2
         }
     }
 
