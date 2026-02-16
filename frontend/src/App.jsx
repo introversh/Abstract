@@ -21,6 +21,8 @@ function App() {
 
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
+      console.log("Attempting to fetch from:", apiUrl); // Debug log
+
       const response = await fetch(`${apiUrl}/summarize`, {
         method: 'POST',
         headers: {
@@ -35,12 +37,17 @@ function App() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to summarize");
+        throw new Error(data.error || `Server Error: ${response.status}`);
       }
 
       setSummary(data.summary);
     } catch (err) {
-      setError(err.message);
+      console.error("Summarization error:", err);
+      let message = err.message;
+      if (message === "Failed to fetch") {
+        message = `Cannot connect to Backend. \nTrying to reach: ${import.meta.env.VITE_API_URL || "localhost (Default)"}. \nCheck your VITE_API_URL setting.`;
+      }
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -100,7 +107,7 @@ function App() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-red-400 text-center bg-red-400/10 p-4 rounded-lg border border-red-400/20"
+              className="text-red-400 text-center bg-red-400/10 p-4 rounded-lg border border-red-400/20 whitespace-pre-wrap"
             >
               {error}
             </motion.div>
