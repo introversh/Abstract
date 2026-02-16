@@ -11,7 +11,7 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
-API_URL = "https://router.huggingface.co/models/facebook/bart-large-cnn"
+API_URL = "https://router.huggingface.co/hf-inference/models/facebook/bart-large-cnn"
 HF_TOKEN = os.getenv("HF_TOKEN")
 
 headers = {
